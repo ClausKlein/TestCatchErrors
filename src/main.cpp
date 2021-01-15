@@ -21,7 +21,7 @@ void s_thread(void (*fkt)())
 void s_funcOk() {}
 void s_threadOk() { s_thread(&s_funcOk); }
 
-void s_funcExit() { exit(0); }
+void s_funcExit() { exit(EXIT_FAILURE); }
 void s_threadExit() { s_thread(&s_funcExit); }
 
 void s_funcAbort() { abort(); }
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     }
 
     // ================
-    ErrHdlr_register();
+    //XXX ErrHdlr_register();
 
     std::cout << "Try to call given handler:\n";
     for (auto i = 1; i < argc; ++i) {
@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
             (s_calls[idx].call)();
         }
     }
+    std::cout << "done\n";
 
     ErrHdlr_cleanup();
     // ================

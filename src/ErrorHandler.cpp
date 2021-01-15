@@ -4,6 +4,12 @@
 #include <execinfo.h>
 #include <iostream>
 
+// see too:
+// https://en.cppreference.com/w/cpp/error/set_terminate
+// https://man7.org/linux/man-pages/man3/backtrace.3.html
+// and
+// https://stackoverflow.com/questions/9758495/what-is-the-difference-between-stdquick-exit-and-stdabort-and-why-was-stdq
+//
 // To generate a C-Library which also support terminate this dirty workaround
 // at least for gcc can help
 //
@@ -27,49 +33,66 @@ void s_dumpCallstack(const std::string& msg)
             std::cerr << strs[i] << std::endl;
         }
         free(strs);
-        std::cerr << "Stack backtrace finished!\n";
+        std::cerr << "Stack backtrace finished!" << std::endl;
     }
 }
 
-void s_callExit() { s_dumpCallstack(__func__); }
+void s_callExit()
+{
+    s_dumpCallstack(__func__);
+    // XXX ::quick_exit(EXIT_FAILURE);
+    _Exit(EXIT_SUCCESS);
+}
 
 void s_callAbort(int)
 {
     s_dumpCallstack(__func__);
-    //XXX ::quick_exit(EXIT_FAILURE);
-    ErrHdlr_cleanup();
+    // XXX ::quick_exit(EXIT_FAILURE);
+    _Exit(EXIT_SUCCESS);
+}
+
+void s_callBus(int)
+{
+    s_dumpCallstack(__func__);
+    // XXX ::quick_exit(EXIT_FAILURE);
+    _Exit(EXIT_SUCCESS);
 }
 
 void s_callIllegal(int)
 {
     s_dumpCallstack(__func__);
-    //XXX ::quick_exit(EXIT_FAILURE);
-    ErrHdlr_cleanup();
+    // XXX ::quick_exit(EXIT_FAILURE);
+    _Exit(EXIT_SUCCESS);
 }
 
 void s_callSegmentationFault(int)
 {
     s_dumpCallstack(__func__);
-    //XXX ::quick_exit(EXIT_FAILURE);
-    ErrHdlr_cleanup();
+    // XXX ::quick_exit(EXIT_FAILURE);
+    _Exit(EXIT_SUCCESS);
 }
 
 void s_callTerminate()
 {
     s_dumpCallstack(__func__);
-    //XXX ::quick_exit(EXIT_FAILURE);
-    ErrHdlr_cleanup();
+    // XXX ::quick_exit(EXIT_FAILURE);
+    _Exit(EXIT_SUCCESS);
 }
 } // namespace
 
 void ErrHdlr_register()
 {
     ::atexit(s_callExit);
-    //TODO ::at_quick_exit(s_callExit);
-    std::signal(SIGABRT, s_callAbort);
-    std::signal(SIGILL, s_callIllegal);
-    std::signal(SIGSEGV, s_callSegmentationFault);
+    ::signal(SIGABRT, s_callAbort);
+    ::signal(SIGBUS, s_callBus);
+    ::signal(SIGILL, s_callIllegal);
+    ::signal(SIGSEGV, s_callSegmentationFault);
+    // TODO ::at_quick_exit(s_callExit);
+    // NOTE: C++ only! CK
     std::set_terminate(s_callTerminate);
 }
 
-void ErrHdlr_cleanup() { s_doOutput = false; exit(EXIT_SUCCESS); }
+void ErrHdlr_cleanup()
+{
+    s_doOutput = false;
+}
