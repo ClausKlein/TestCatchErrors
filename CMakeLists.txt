@@ -27,7 +27,7 @@ if(BUILD_TESTS)
 
     add_test(NAME usage COMMAND main)
     add_test(NAME error COMMAND main illegal parameter)
-    foreach(I RANGE -2 11)
+    foreach(I RANGE -3 11)
         add_test(NAME main_${I} COMMAND main ${I})
     endforeach()
 endif()

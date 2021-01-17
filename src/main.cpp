@@ -35,7 +35,7 @@ void s_funcSuspend()
 }
 void s_threadSuspend() { s_thread(&s_funcSuspend); }
 
-void s_funcException() { throw new std::runtime_error("Not implemented yet!"); }
+void s_funcException() { throw std::runtime_error("Not implemented yet!"); }
 void s_threadException() { s_thread(&s_funcException); }
 
 const MenuInfo s_calls[] = {{"Function calls ok", &s_funcOk},
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     }
 
     // ================
-    //XXX ErrHdlr_register();
+    ErrHdlr_register();
 
     std::cout << "Try to call given handler:\n";
     for (auto i = 1; i < argc; ++i) {
