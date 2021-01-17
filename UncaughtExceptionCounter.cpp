@@ -11,8 +11,8 @@ public:
     RAII() = default;
     ~RAII()
     {
-        std::cout << (!ec_.newUncaughtException() ? "~RAII() called normally\n"
-                                                  : "~RAII() called during stack unwinding\n");
+        std::cout << (!ec_.isNewUncaughtException() ? "~RAII() called normally\n"
+                                                    : "~RAII() called during stack unwinding\n");
     }
 };
 

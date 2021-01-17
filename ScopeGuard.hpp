@@ -1,59 +1,92 @@
+// from
+// https://github.com/CppCon/CppCon2015/blob/master/Presentations/Declarative%20Control%20Flow/Declarative%20Control%20Flow%20-%20Andrei%20Alexandrescu%20-%20CppCon%202015.pdf
+//
+
 #pragma ones
+
+#include "UncaughtExceptionCounter.hpp"
 
 #include <utility>
 
-// see https://www.drdobbs.com/article/print?articleId=184403758&siteSectionName=cpp
-// and
-// https://github.com/CppCon/CppCon2015/blob/master/Presentations/Declarative%20Control%20Flow/Declarative%20Control%20Flow%20-%20Andrei%20Alexandrescu%20-%20CppCon%202015.pdf
-
 namespace detail {
 
-class ScopeGuardImplBase
+template <typename FunctionType> class ScopeGuard
 {
-public:
-    void Dismiss() const { dismissed_ = true; }
+    FunctionType function_;
 
-protected:
-    ScopeGuardImplBase() : dismissed_(false) {}
-    ScopeGuardImplBase(const ScopeGuardImplBase& other) : dismissed_(other.dismissed_)
+public:
+    ScopeGuard() = delete;
+    explicit ScopeGuard(const FunctionType& fn) : function_(fn) {}
+    explicit ScopeGuard(FunctionType&& fn) : function_(std::move(fn)) {}
+    ~ScopeGuard() noexcept
     {
-        other.Dismiss();
+        function_(); // NOTE: Only SCOPE_SUCCESS may throw!
     }
-    ~ScopeGuardImplBase() {} // nonvirtual (see below why)
-    mutable bool dismissed_;
 
 private:
+    // Disable copy
+    ScopeGuard(const ScopeGuard& /*other*/) = delete;
+    ScopeGuard(const ScopeGuard&& /*other*/) = delete;
     // Disable assignment
-    ScopeGuardImplBase& operator=(const ScopeGuardImplBase&);
-};
-
-template <typename Fun> class ScopeGuard : public ScopeGuardImplBase
-{
-public:
-    ScopeGuard(const Fun& fun) : fun_(fun) {}
-    ~ScopeGuard()
-    {
-        if (!dismissed_) {
-            try {
-                (fun_)();
-            } catch (...) {} // NOTE: In the realm of exceptions, it is fundamental that
-            // you can do nothing if your "undo/recover" action fails.
-            // You attempt an undo operation, and you move on regardless
-            // whether the undo operation succeeds or not.
-        }
-    }
-
-private:
-    Fun fun_;
+    ScopeGuard& operator=(ScopeGuard& /*other*/) = delete;
+    ScopeGuard& operator=(ScopeGuard&& /*other*/) = delete;
 };
 
 enum class ScopeGuardOnExit
 {
 };
 
-template <typename Fun> ScopeGuard<Fun> operator+(ScopeGuardOnExit, Fun&& fn)
+template <typename FunctionType>
+ScopeGuard<FunctionType> operator+(ScopeGuardOnExit /*unused*/, FunctionType&& fn)
 {
-    return ScopeGuard<Fun>(std::forward<Fun>(fn));
+    return ScopeGuard<FunctionType>(std::forward<FunctionType>(fn));
+}
+
+template <typename FunctionType, bool executeOnException> class ScopeGuardForNewException
+{
+    FunctionType function_;
+    UncaughtExceptionCounter ec_;
+
+public:
+    ScopeGuardForNewException() = delete;
+    explicit ScopeGuardForNewException(const FunctionType& fn) : function_(fn) {}
+    explicit ScopeGuardForNewException(FunctionType&& fn) : function_(std::move(fn)) {}
+    ~ScopeGuardForNewException() noexcept(executeOnException)
+    {
+        if (executeOnException == ec_.isNewUncaughtException()) {
+            function_(); // NOTE: Only SCOPE_SUCCESS may throw!
+        }
+    }
+
+private:
+    // Disable copy
+    ScopeGuardForNewException(const ScopeGuardForNewException& /*other*/) = delete;
+    ScopeGuardForNewException(const ScopeGuardForNewException&& /*other*/) = delete;
+    // Disable assignment
+    ScopeGuardForNewException& operator=(ScopeGuardForNewException& /*other*/) = delete;
+    ScopeGuardForNewException& operator=(ScopeGuardForNewException&& /*other*/) = delete;
+};
+
+enum class ScopeGuardOnFail
+{
+};
+template <typename FunctionType>
+ScopeGuardForNewException<typename std::decay<FunctionType>::type, true>
+operator+(detail::ScopeGuardOnFail /*unused*/, FunctionType&& fn)
+{
+    return ScopeGuardForNewException<typename std::decay<FunctionType>::type, true>(
+        std::forward<FunctionType>(fn));
+}
+
+enum class ScopeGuardOnSuccess
+{
+};
+template <typename FunctionType>
+ScopeGuardForNewException<typename std::decay<FunctionType>::type, false>
+operator+(detail::ScopeGuardOnSuccess /*unused*/, FunctionType&& fn)
+{
+    return ScopeGuardForNewException<typename std::decay<FunctionType>::type, false>(
+        std::forward<FunctionType>(fn));
 }
 } // namespace detail
 
@@ -66,4 +99,11 @@ template <typename Fun> ScopeGuard<Fun> operator+(ScopeGuardOnExit, Fun&& fn)
 #    define ANONYMOUS_VARIABLE(str) CONCATENATE(str, __LINE__)
 #endif
 
-#define SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE) = ::detail::ScopeGuardOnExit() + [&]()
+#define SCOPE_SUCCESS                                                                                 \
+    auto ANONYMOUS_VARIABLE(SCOPE_ON_SUCCESS) = ::detail::ScopeGuardOnSuccess() + [&]()
+
+#define SCOPE_EXIT                                                                                    \
+    auto ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE) = ::detail::ScopeGuardOnExit() + [&]() noexcept
+
+#define SCOPE_FAIL                                                                                    \
+    auto ANONYMOUS_VARIABLE(SCOPE_FAIL_STATE) = ::detail::ScopeGuardOnFail() + [&]() noexcept
