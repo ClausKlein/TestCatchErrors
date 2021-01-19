@@ -6,8 +6,13 @@
 #include <fstream>
 #include <iostream>
 
+// TODO: #define NO_BOOST
+#ifndef NO_BOOST
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <boost/stacktrace.hpp>
+#endif
 
 // see too:
 // https://www.boost.org/doc/libs/1_75_0/doc/html/stacktrace/getting_started.html#stacktrace.getting_started.handle_terminates_aborts_and_seg
@@ -25,12 +30,19 @@
 namespace {
 bool s_doOutput = true;
 
+#ifndef NO_BOOST
 void s_dumpCallstack(const std::string& /*msg*/)
 {
     if (s_doOutput) {
-#ifndef NO_BOOST
         boost::stacktrace::safe_dump_to("./backtrace.dump");
+    }
+}
+
 #else
+void s_dumpCallstack(const std::string& msg)
+
+{
+    if (s_doOutput) {
         constexpr size_t cnt{128};
         static void* callstack[cnt];
 
@@ -43,9 +55,9 @@ void s_dumpCallstack(const std::string& /*msg*/)
         }
         free(strs);
         std::cerr << "Stack backtrace finished!" << std::endl;
-#endif
     }
 }
+#endif
 
 void s_callExit()
 {
@@ -96,6 +108,7 @@ void s_callTerminate()
 
 void ErrHdlr_register()
 {
+#ifndef NO_BOOST
     if (std::filesystem::exists("./backtrace.dump")) {
         // there is a backtrace
         std::ifstream ifs("./backtrace.dump");
@@ -107,6 +120,7 @@ void ErrHdlr_register()
         ifs.close();
         std::filesystem::remove("./backtrace.dump");
     }
+#endif
 
     ::atexit(s_callExit);
     ::signal(SIGABRT, s_callAbort);
