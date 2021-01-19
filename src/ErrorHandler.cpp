@@ -1,4 +1,4 @@
-#include "ErrorHandler.h"
+#include "ErrorHandler.hpp"
 
 #include <csignal>
 #include <execinfo.h>

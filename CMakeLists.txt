@@ -19,7 +19,7 @@ set(Boost_VERBOSE ON)
 
 add_executable(main src/main.cpp
     src/ErrorHandler.cpp
-    src/ErrorHandler.h
+    src/ErrorHandler.hpp
 )
 target_compile_features(main PRIVATE cxx_std_17)
 
@@ -27,7 +27,7 @@ if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
     target_link_libraries(main PRIVATE "stdc++fs" dl pthread)
 else()
     find_package(Boost REQUIRED)
-    target_link_libraries(main PRIVATE Boost::headers "stdc++fs")
+    target_link_libraries(main PRIVATE Boost::headers)
 endif()
 
 option(BUILD_TESTS "Build test programs" ${MASTER_PROJECT})
