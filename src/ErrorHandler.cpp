@@ -2,9 +2,15 @@
 
 #include <csignal>
 #include <execinfo.h>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 
+#define _GNU_SOURCE
+#include <boost/stacktrace.hpp>
+
 // see too:
+// https://www.boost.org/doc/libs/1_75_0/doc/html/stacktrace/getting_started.html#stacktrace.getting_started.handle_terminates_aborts_and_seg
 // https://en.cppreference.com/w/cpp/error/set_terminate
 // https://man7.org/linux/man-pages/man3/backtrace.3.html
 // and
@@ -19,9 +25,12 @@
 namespace {
 bool s_doOutput = true;
 
-void s_dumpCallstack(const std::string& msg)
+void s_dumpCallstack(const std::string& /*msg*/)
 {
     if (s_doOutput) {
+#ifndef NO_BOOST
+        boost::stacktrace::safe_dump_to("./backtrace.dump");
+#else
         constexpr size_t cnt{128};
         static void* callstack[cnt];
 
@@ -34,6 +43,7 @@ void s_dumpCallstack(const std::string& msg)
         }
         free(strs);
         std::cerr << "Stack backtrace finished!" << std::endl;
+#endif
     }
 }
 
@@ -44,29 +54,33 @@ void s_callExit()
     _Exit(EXIT_SUCCESS);
 }
 
-void s_callAbort(int)
+void s_callAbort(int signum)
 {
+    ::signal(signum, SIG_DFL);
     s_dumpCallstack(__func__);
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
 
-void s_callBus(int)
+void s_callBus(int signum)
 {
+    ::signal(signum, SIG_DFL);
     s_dumpCallstack(__func__);
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
 
-void s_callIllegal(int)
+void s_callIllegal(int signum)
 {
+    ::signal(signum, SIG_DFL);
     s_dumpCallstack(__func__);
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
 
-void s_callSegmentationFault(int)
+void s_callSegmentationFault(int signum)
 {
+    ::signal(signum, SIG_DFL);
     s_dumpCallstack(__func__);
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
@@ -82,6 +96,18 @@ void s_callTerminate()
 
 void ErrHdlr_register()
 {
+    if (std::filesystem::exists("./backtrace.dump")) {
+        // there is a backtrace
+        std::ifstream ifs("./backtrace.dump");
+
+        boost::stacktrace::stacktrace st = boost::stacktrace::stacktrace::from_dump(ifs);
+        std::cerr << "Previous run crashed:\n" << st << std::endl;
+
+        // cleaning up
+        ifs.close();
+        std::filesystem::remove("./backtrace.dump");
+    }
+
     ::atexit(s_callExit);
     ::signal(SIGABRT, s_callAbort);
     ::signal(SIGBUS, s_callBus);
@@ -92,7 +118,4 @@ void ErrHdlr_register()
     std::set_terminate(s_callTerminate);
 }
 
-void ErrHdlr_cleanup()
-{
-    s_doOutput = false;
-}
+void ErrHdlr_cleanup() { s_doOutput = false; }

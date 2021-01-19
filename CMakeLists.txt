@@ -15,11 +15,15 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(STATUS "CMake version: ${CMAKE_VERSION}")
 endif()
 
+set(Boost_VERBOSE ON)
+find_package(Boost CONFIG REQUIRED)
+
 add_executable(main src/main.cpp
     src/ErrorHandler.cpp
     src/ErrorHandler.h
 )
 target_compile_features(main PRIVATE cxx_std_17)
+target_link_libraries(main PRIVATE Boost::headers)
 
 option(BUILD_TESTS "Build test programs" ${MASTER_PROJECT})
 if(BUILD_TESTS)

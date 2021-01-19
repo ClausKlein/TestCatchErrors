@@ -136,7 +136,7 @@ TEST(ScopeGuard, DifferentWaysToBind) {
 
 }
 
-#if 0
+#ifdef HAS_FOLLY
 TEST(ScopeGuard, GuardException) {
   EXPECT_DEATH(
       (void)makeGuard(

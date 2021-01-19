@@ -6,7 +6,7 @@ CPPFLAGS:=-MMD
 PROGRAMMS:= ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception src/main
 
 SRC:=$(PROGRAMMS:=.cpp)
-SRC+=src/ErrorHandler.cpp
+SRC+= src/ErrorHandler.cpp
 
 OBJ:=$(SRC:.cpp=.o)
 DEP:=$(OBJ:.o=.d)

@@ -101,6 +101,10 @@ class ScopeGuardImpl : public ScopeGuardImplBase {
     try {
       function_();
     } catch(...) {}
+    // NOTE: In the realm of exceptions, it is fundamental that you can
+    // do nothing if your "undo/recover" action fails. You attempt an
+    // undo operation, and you move on regardless whether the undo
+    // operation succeeds or not.
   }
 
   FunctionType function_;
