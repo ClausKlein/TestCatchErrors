@@ -7,8 +7,8 @@ endif()
 
 project(CatchErrors LANGUAGES CXX)
 
-# Determine if fmt is built as a subproject (using add_subdirectory)
-# or if it is the master project.
+# Determine if this project is built as a subproject (using
+# add_subdirectory) or if it is the master project.
 set(MASTER_PROJECT OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MASTER_PROJECT ON)
@@ -27,7 +27,7 @@ if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
     target_link_libraries(main PRIVATE "stdc++fs" dl pthread)
 else()
     find_package(Boost REQUIRED)
-    target_link_libraries(main PRIVATE Boost::headers)
+    target_link_libraries(main PRIVATE Boost::headers "stdc++fs")
 endif()
 
 option(BUILD_TESTS "Build test programs" ${MASTER_PROJECT})

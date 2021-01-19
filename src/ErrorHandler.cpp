@@ -8,10 +8,10 @@
 
 // TODO: #define NO_BOOST
 #ifndef NO_BOOST
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include <boost/stacktrace.hpp>
+#    ifndef _GNU_SOURCE
+#        define _GNU_SOURCE
+#    endif
+#    include <boost/stacktrace.hpp>
 #endif
 
 // see too:
