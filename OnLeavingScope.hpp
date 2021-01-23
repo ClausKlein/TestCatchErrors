@@ -65,6 +65,7 @@ public:
     // Prevent copying
     OnLeavingScope(const OnLeavingScope&) = delete;
     OnLeavingScope& operator=(const OnLeavingScope&) = delete;
+    OnLeavingScope& operator=(const OnLeavingScope&&) = delete;
 
     // Allow moving
     OnLeavingScope(OnLeavingScope&& other) noexcept : m_func(std::move(other.m_func)), m_owner(other.m_owner)
