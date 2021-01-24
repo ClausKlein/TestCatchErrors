@@ -1,4 +1,5 @@
 OnLeavingScope
+RangesSamples
 ScopeGuardOnExit
 ScopeGuardTest
 UncaughtExceptionCounter

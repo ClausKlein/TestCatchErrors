@@ -1,9 +1,13 @@
 LDFLAGS=-L/usr/local/lib
 LDLIBS:=-lboost_filesystem
-CXXFLAGS:=-std=c++17 -Wextra
-CPPFLAGS:=-MMD
+
+#NO! CXX:=clang++
+#XXX CXX:=g++-10
+CXXFLAGS:=-std=c++2a -Wextra
+CPPFLAGS:=-MMD -I/usr/local/include
 
 PROGRAMMS:= OnLeavingScope ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception src/main
+#XXX PROGRAMMS+= RangesSamples
 
 SRC:=$(PROGRAMMS:=.cpp)
 SRC+= src/ErrorHandler.cpp
