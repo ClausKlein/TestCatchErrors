@@ -6,7 +6,7 @@ LDLIBS:=-lboost_filesystem
 CXXFLAGS:=-std=c++2a -Wextra
 CPPFLAGS:=-MMD -I/usr/local/include
 
-PROGRAMMS:= OnLeavingScope ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception src/main
+PROGRAMMS:= filesystem_test OnLeavingScope ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception src/main
 #XXX PROGRAMMS+= RangesSamples
 
 SRC:=$(PROGRAMMS:=.cpp)
@@ -26,7 +26,7 @@ ScopeGuardTest: LDLIBS:=-lgtest -lglog -lgtest_main
 ScopeGuardTest: ScopeGuardTest.cpp
 	$(LINK.cc) $(LDLIBS) $< -o $@
 
-%: %.cpp
+%: %.o
 	$(LINK.cc) $(LDLIBS) $< -o $@
 
 test: ScopeGuardTest

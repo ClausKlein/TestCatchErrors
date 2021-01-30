@@ -3,5 +3,7 @@ RangesSamples
 ScopeGuardOnExit
 ScopeGuardTest
 UncaughtExceptionCounter
+array_size
+filesystem_test
 src/main
 uncaught_exception
