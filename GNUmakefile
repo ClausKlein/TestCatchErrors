@@ -1,7 +1,7 @@
 LDFLAGS=-L/usr/local/lib
-LDLIBS:=-lboost_filesystem
+LDLIBS:=-lboost_filesystem -lboost_system -lpthread
 
-#NO! CXX:=clang++
+CXX:=clang++
 #XXX CXX:=g++-10
 CXXFLAGS:=-std=c++2a -Wextra
 CPPFLAGS:=-MMD -I/usr/local/include
@@ -22,7 +22,7 @@ all: $(PROGRAMMS)
 src/main: src/main.o src/ErrorHandler.o
 	$(LINK.cc) $< src/ErrorHandler.o -o $@
 
-ScopeGuardTest: LDLIBS:=-lgtest -lglog -lgtest_main
+ScopeGuardTest: LDLIBS:=-lgtest -lgtest_main
 ScopeGuardTest: ScopeGuardTest.cpp
 	$(LINK.cc) $(LDLIBS) $< -o $@
 

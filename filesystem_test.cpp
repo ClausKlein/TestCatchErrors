@@ -113,6 +113,7 @@ SCENARIO("vectors can be sized and resized")
     }
 }
 
+#if 0
 TEST_CASE("test case should fail even though the last subcase passes")
 {
     SUBCASE("one") { CHECK(false); }
@@ -129,7 +130,7 @@ TEST_CASE("fails from an exception but gets re-entered to traverse all subcases"
         throw_if(true, "failure... but the show must go on!");
     }
 }
-
+#endif
 
 static void checks(int data)
 {
@@ -182,12 +183,14 @@ namespace fs = boost::filesystem;
 class UniqueTestsFixture
 {
 private:
-    static fs::path basedir;
+    fs::path basedir{"/var/tmp/test/xml/."};
 
 public:
     UniqueTestsFixture()
     {
-        MESSAGE("mkdir " << basedir);
+        basedir = makeCanonical(basedir);
+
+        MESSAGE("mkdir -p " << basedir);
         fs::create_directories(basedir);
     }
 
@@ -197,16 +200,35 @@ public:
         fs::remove_all(basedir);
     }
 
-protected:
-    const auto& getDir() { return basedir; }
-};
+    static fs::path makeCanonical(const fs::path& dir)
+    {
+        if (dir.filename() == ".") {
+            return fs::weakly_canonical(dir.parent_path());
+        }
+        return fs::weakly_canonical(dir);
+    }
 
-fs::path UniqueTestsFixture::basedir{"/var/tmp/test/xml"};
+protected:
+    const auto& getDir() const { return basedir; }
+};
 
 static void checkIfEmptyDir(const fs::path& dir)
 {
     REQUIRE(fs::is_directory(dir));
     REQUIRE(fs::is_empty(dir));
+}
+
+TEST_CASE_FIXTURE(UniqueTestsFixture, "Canonical paths")
+{
+    CHECK(makeCanonical("/") == "/");
+    CHECK(makeCanonical("/.") == "/");
+    CHECK(makeCanonical("/..") == "/");
+    CHECK(makeCanonical("/test") == "/test");
+    CHECK(makeCanonical("/test/") == "/test");
+    CHECK(makeCanonical("/test/subdir/.") == "/test/subdir");
+    CHECK(makeCanonical("/test/subdir/..") == "/test");
+    CHECK(makeCanonical("/test/./subdir/") == "/test/subdir");
+    CHECK(makeCanonical("/1/../2/../subdir") == "/subdir");
 }
 
 TEST_CASE_FIXTURE(UniqueTestsFixture, "Create directory/Failure")
@@ -219,9 +241,7 @@ TEST_CASE_FIXTURE(UniqueTestsFixture, "Create directory/Failure")
 
 TEST_CASE_FIXTURE(UniqueTestsFixture, "Create directory/Normal")
 {
-    auto dir = getDir().lexically_normal();
-    // REQUIRE(fs::exists(dir));
-    // REQUIRE(fs::is_directory(dir));
+    auto dir = getDir();
     checkIfEmptyDir(dir);
 
     auto subdir = dir / "Normal";
