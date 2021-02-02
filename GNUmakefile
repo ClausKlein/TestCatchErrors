@@ -1,9 +1,10 @@
 LDFLAGS=-L/usr/local/lib
 LDLIBS:=-lboost_filesystem -lboost_system -lpthread
 
-CXX:=clang++
-#XXX CXX:=g++-10
-CXXFLAGS:=-std=c++2a -Wextra
+#XXX CXX:=clang++
+#!NO CXX:=g++-10
+CXX:=g++
+CXXFLAGS:=-std=c++2a -Wextra -DBOOST_FILESYSTEM_NO_DEPRECATED
 CPPFLAGS:=-MMD -I/usr/local/include
 
 PROGRAMMS:= filesystem_test OnLeavingScope ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception src/main

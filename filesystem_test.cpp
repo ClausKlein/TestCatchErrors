@@ -1,6 +1,3 @@
-
-#include <boost/filesystem.hpp>
-
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
@@ -8,6 +5,15 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <iostream>
 #include <string>
 #include <vector>
+
+#ifdef CXX_FILESYSTEM_HAVE_FS
+#    include <filesystem>
+namespace fs = std::filesystem;
+#else
+#    include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#endif
+
 using namespace std;
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
@@ -178,8 +184,6 @@ TEST_CASE("subcases with changing names")
 
 //#################################################
 
-namespace fs = boost::filesystem;
-
 class UniqueTestsFixture
 {
 private:
@@ -202,10 +206,12 @@ public:
 
     static fs::path makeCanonical(const fs::path& dir)
     {
-        if (dir.filename() == ".") {
-            return fs::weakly_canonical(dir.parent_path());
+        INFO(dir << " ->filename: "<< dir.filename());
+        auto d = fs::weakly_canonical(dir);
+        if ((d.filename() == ".") || (d.filename() == "")) {
+            return fs::weakly_canonical(d.parent_path());
         }
-        return fs::weakly_canonical(dir);
+        return d;
     }
 
 protected:
