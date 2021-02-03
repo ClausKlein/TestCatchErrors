@@ -4,11 +4,12 @@ LDLIBS:=-lboost_filesystem -lboost_system -lpthread
 #XXX CXX:=clang++
 #!NO CXX:=g++-10
 CXX:=g++
-CXXFLAGS:=-std=c++2a -Wextra -DBOOST_FILESYSTEM_NO_DEPRECATED
+CXXFLAGS:=-std=c++2a -Wextra -DBOOST_FILESYSTEM_NO_DEPRECATED -UCXX_FILESYSTEM_HAVE_FS
 CPPFLAGS:=-MMD -I/usr/local/include
 
-PROGRAMMS:= filesystem_test OnLeavingScope ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception src/main
-#XXX PROGRAMMS+= RangesSamples
+PROGRAMMS:= filesystem_test OnLeavingScope ScopeGuardTest UncaughtExceptionCounter ScopeGuardOnExit uncaught_exception
+#NO! PROGRAMMS+= src/main
+PROGRAMMS+= RangesSamples
 
 SRC:=$(PROGRAMMS:=.cpp)
 SRC+= src/ErrorHandler.cpp
@@ -21,14 +22,14 @@ DEP:=$(OBJ:.o=.d)
 all: $(PROGRAMMS)
 
 src/main: src/main.o src/ErrorHandler.o
-	$(LINK.cc) $< src/ErrorHandler.o -o $@
+	$(LINK.cc) $< $(LDLIBS) src/ErrorHandler.o -o $@
 
 ScopeGuardTest: LDLIBS:=-lgtest -lgtest_main
 ScopeGuardTest: ScopeGuardTest.cpp
-	$(LINK.cc) $(LDLIBS) $< -o $@
+	$(LINK.cc) $< $(LDLIBS) -o $@
 
 %: %.o
-	$(LINK.cc) $(LDLIBS) $< -o $@
+	$(LINK.cc) $< $(LDLIBS) -o $@
 
 test: ScopeGuardTest
 	./$<
