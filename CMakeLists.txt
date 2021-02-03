@@ -1,9 +1,4 @@
-cmake_minimum_required(VERSION 3.1...3.19)
-
-# Fallback for using newer policies on CMake <3.12.
-if(${CMAKE_VERSION} VERSION_LESS 3.12)
-  cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
-endif()
+cmake_minimum_required(VERSION 3.13...3.19)
 
 project(CatchErrors LANGUAGES CXX)
 
@@ -13,26 +8,47 @@ set(MASTER_PROJECT OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MASTER_PROJECT ON)
     message(STATUS "CMake version: ${CMAKE_VERSION}")
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS NO)
 endif()
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
+find_package(Filesystem REQUIRED)
+find_package(doctest REQUIRED)
 set(Boost_VERBOSE ON)
+find_package(Boost COMPONENTS filesystem)
+
+add_executable(FilesystemTest FilesystemTest.cpp)
 
 add_executable(main src/main.cpp
     src/ErrorHandler.cpp
     src/ErrorHandler.hpp
 )
-target_compile_features(main PRIVATE cxx_std_17)
 
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
-    target_link_libraries(main PRIVATE "stdc++fs" dl pthread)
+    find_package(Threads REQUIRED)
+    target_compile_definitions(FilesystemTest PRIVATE CXX_FILESYSTEM_HAVE_FS)
+    target_link_libraries(FilesystemTest PRIVATE doctest::doctest std::filesystem Threads::Threads)
+    target_link_libraries(main PRIVATE dl std::filesystem Threads::Threads)
 else()
-    find_package(Boost REQUIRED)
+    target_compile_definitions(FilesystemTest PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
+    target_link_libraries(FilesystemTest PRIVATE doctest::doctest Boost::filesystem)
     target_link_libraries(main PRIVATE Boost::headers)
 endif()
 
 option(BUILD_TESTS "Build test programs" ${MASTER_PROJECT})
 if(BUILD_TESTS)
     enable_testing()
+
+    find_package(GTest)
+    if(GTEST_FOUND)
+        add_executable(ScopeGuardTest ScopeGuardTest.cpp)
+        target_link_libraries(ScopeGuardTest PRIVATE GTest::GTest GTest::Main)
+        add_test(NAME ScopeGuardTest COMMAND ScopeGuardTest)
+    endif()
+
+    add_test(NAME FilesystemTest COMMAND FilesystemTest)
 
     add_test(NAME usage COMMAND main)
     add_test(NAME error COMMAND main illegal parameter)

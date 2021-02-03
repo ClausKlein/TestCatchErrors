@@ -16,6 +16,7 @@
 
 #ifdef HAS_FOLLY
 #    include <folly/ScopeGuard.h>
+#    include <glog/logging.h>
 using folly::makeGuard;
 #else
 #    include "ScopeGuard.hpp"
@@ -25,7 +26,6 @@ using folly::makeGuard;
 
 #include <condition_variable>
 #include <functional>
-#include <glog/logging.h>
 #include <stdexcept>
 #include <thread>
 #include <vector>
@@ -265,7 +265,7 @@ public:
             }
             EXPECT_EQ(1, test);
         } catch (const std::exception& ex) {
-            LOG(FATAL) << "Unexpected exception: " << ex.what();
+            std::cerr << "Unexpected exception: " << ex.what() << std::endl;
         }
     }
 };

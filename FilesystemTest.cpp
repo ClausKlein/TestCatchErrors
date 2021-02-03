@@ -1,6 +1,3 @@
-
-#include <boost/filesystem.hpp>
-
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
@@ -8,6 +5,15 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <iostream>
 #include <string>
 #include <vector>
+
+#ifdef CXX_FILESYSTEM_HAVE_FS
+#    include <filesystem>
+namespace fs = std::filesystem;
+#else
+#    include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#endif
+
 using namespace std;
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
@@ -113,6 +119,7 @@ SCENARIO("vectors can be sized and resized")
     }
 }
 
+#if 0
 TEST_CASE("test case should fail even though the last subcase passes")
 {
     SUBCASE("one") { CHECK(false); }
@@ -129,7 +136,7 @@ TEST_CASE("fails from an exception but gets re-entered to traverse all subcases"
         throw_if(true, "failure... but the show must go on!");
     }
 }
-
+#endif
 
 static void checks(int data)
 {
@@ -177,17 +184,17 @@ TEST_CASE("subcases with changing names")
 
 //#################################################
 
-namespace fs = boost::filesystem;
-
 class UniqueTestsFixture
 {
 private:
-    static fs::path basedir;
+    fs::path basedir{"/var/tmp/test/xml/."};
 
 public:
     UniqueTestsFixture()
     {
-        MESSAGE("mkdir " << basedir);
+        basedir = makeCanonical(basedir);
+
+        MESSAGE("mkdir -p " << basedir);
         fs::create_directories(basedir);
     }
 
@@ -197,16 +204,37 @@ public:
         fs::remove_all(basedir);
     }
 
-protected:
-    const auto& getDir() { return basedir; }
-};
+    static fs::path makeCanonical(const fs::path& dir)
+    {
+        INFO(dir << " ->filename: "<< dir.filename());
+        auto d = fs::weakly_canonical(dir);
+        if ((d.filename() == ".") || (d.filename() == "")) {
+            return fs::weakly_canonical(d.parent_path());
+        }
+        return d;
+    }
 
-fs::path UniqueTestsFixture::basedir{"/var/tmp/test/xml"};
+protected:
+    const auto& getDir() const { return basedir; }
+};
 
 static void checkIfEmptyDir(const fs::path& dir)
 {
     REQUIRE(fs::is_directory(dir));
     REQUIRE(fs::is_empty(dir));
+}
+
+TEST_CASE_FIXTURE(UniqueTestsFixture, "Canonical paths")
+{
+    CHECK(makeCanonical("/") == "/");
+    CHECK(makeCanonical("/.") == "/");
+    CHECK(makeCanonical("/..") == "/");
+    CHECK(makeCanonical("/test") == "/test");
+    CHECK(makeCanonical("/test/") == "/test");
+    CHECK(makeCanonical("/test/subdir/.") == "/test/subdir");
+    CHECK(makeCanonical("/test/subdir/..") == "/test");
+    CHECK(makeCanonical("/test/./subdir/") == "/test/subdir");
+    CHECK(makeCanonical("/1/../2/../subdir") == "/subdir");
 }
 
 TEST_CASE_FIXTURE(UniqueTestsFixture, "Create directory/Failure")
@@ -219,9 +247,7 @@ TEST_CASE_FIXTURE(UniqueTestsFixture, "Create directory/Failure")
 
 TEST_CASE_FIXTURE(UniqueTestsFixture, "Create directory/Normal")
 {
-    auto dir = getDir().lexically_normal();
-    // REQUIRE(fs::exists(dir));
-    // REQUIRE(fs::is_directory(dir));
+    auto dir = getDir();
     checkIfEmptyDir(dir);
 
     auto subdir = dir / "Normal";
