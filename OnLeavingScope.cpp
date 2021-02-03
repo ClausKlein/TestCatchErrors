@@ -54,7 +54,7 @@ public:
 
     Printer(const Printer& p) : m_msg(p.m_msg) { std::cout << "Copied" << std::endl; }
 
-    Printer(Printer&& p) : m_msg(std::move(p.m_msg)) { std::cout << "Moved" << std::endl; }
+    Printer(Printer&& p) noexcept : m_msg(std::move(p.m_msg)) { std::cout << "Moved" << std::endl; }
 
     void operator()() const { std::cout << m_msg << std::endl; }
 

@@ -8,7 +8,7 @@ CXXFLAGS:=-std=c++2a -Wextra -DBOOST_FILESYSTEM_NO_DEPRECATED -UCXX_FILESYSTEM_H
 CPPFLAGS:=-MMD -I/usr/local/include
 
 PROGRAMMS:= FilesystemTest OnLeavingScope UncaughtExceptionCounter ScopeGuardOnExit
-#NO! PROGRAMMS+= ScopeGuardTest src/main uncaught_exception
+#NO! PROGRAMMS+= ScopeGuardTest src/main unused/uncaught_exception unused/array_size
 PROGRAMMS+= RangesSamples
 
 SRC:=$(PROGRAMMS:=.cpp)
@@ -22,7 +22,7 @@ DEP:=$(OBJ:.o=.d)
 all: build $(PROGRAMMS)
 
 build:
-	cmake -G Ninja -B $@ -S .
+	cmake -G Ninja -B $@ -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 	ninja -C $@
 
 src/main: src/main.o src/ErrorHandler.o
@@ -38,8 +38,8 @@ ScopeGuardTest: ScopeGuardTest.cpp
 test: build
 	ninja -C $< $@
 
-check:
-	clang-tidy *.hpp
+check: build
+	run-clang-tidy.py -p $< OnLeavingScope.cpp ScopeGuardOnExit.cpp UncaughtExceptionCounter.cpp # src #XXX $(SRC)
 
 clean:
 	rm -rf $(PROGRAMMS) $(OBJ)

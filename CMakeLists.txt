@@ -19,22 +19,29 @@ find_package(doctest REQUIRED)
 set(Boost_VERBOSE ON)
 find_package(Boost COMPONENTS filesystem)
 
+add_executable(OnLeavingScope OnLeavingScope.cpp)
+add_executable(UncaughtExceptionCounter UncaughtExceptionCounter.cpp)
+
 add_executable(FilesystemTest FilesystemTest.cpp)
 
-add_executable(main src/main.cpp
+add_executable(ErrorHandlerTest src/main.cpp
     src/ErrorHandler.cpp
     src/ErrorHandler.hpp
 )
 
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
     find_package(Threads REQUIRED)
+
     target_compile_definitions(FilesystemTest PRIVATE CXX_FILESYSTEM_HAVE_FS)
     target_link_libraries(FilesystemTest PRIVATE doctest::doctest std::filesystem Threads::Threads)
-    target_link_libraries(main PRIVATE dl std::filesystem Threads::Threads)
+    target_link_libraries(ErrorHandlerTest PRIVATE dl std::filesystem Threads::Threads)
 else()
     target_compile_definitions(FilesystemTest PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
     target_link_libraries(FilesystemTest PRIVATE doctest::doctest Boost::filesystem)
-    target_link_libraries(main PRIVATE Boost::headers)
+    target_link_libraries(ErrorHandlerTest PRIVATE Boost::headers)
+
+    add_executable(ScopeGuardOnExit ScopeGuardOnExit.cpp)
+    target_link_libraries(ScopeGuardOnExit PRIVATE Boost::filesystem)
 endif()
 
 option(BUILD_TESTS "Build test programs" ${MASTER_PROJECT})
@@ -50,9 +57,9 @@ if(BUILD_TESTS)
 
     add_test(NAME FilesystemTest COMMAND FilesystemTest)
 
-    add_test(NAME usage COMMAND main)
-    add_test(NAME error COMMAND main illegal parameter)
+    add_test(NAME usage COMMAND ErrorHandlerTest)
+    add_test(NAME error COMMAND ErrorHandlerTest illegal parameter)
     foreach(I RANGE -3 11)
-        add_test(NAME main_${I} COMMAND main ${I})
+        add_test(NAME main_${I} COMMAND ErrorHandlerTest ${I})
     endforeach()
 endif()

@@ -17,7 +17,7 @@ namespace fs = boost::filesystem;
 using namespace std;
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
-#include "header.hpp"
+// XXX #include "unused/header.hpp"  // throw_if()
 
 #if 0
 TEST_CASE("lots of nested subcases")
@@ -206,7 +206,7 @@ public:
 
     static fs::path makeCanonical(const fs::path& dir)
     {
-        INFO(dir << " ->filename: "<< dir.filename());
+        INFO(dir << " ->filename: " << dir.filename());
         auto d = fs::weakly_canonical(dir);
         if ((d.filename() == ".") || (d.filename() == "")) {
             return fs::weakly_canonical(d.parent_path());
