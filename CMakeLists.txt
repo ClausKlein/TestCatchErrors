@@ -15,7 +15,6 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
 find_package(Filesystem REQUIRED)
-find_package(Threads REQUIRED)
 find_package(doctest REQUIRED)
 set(Boost_VERBOSE ON)
 find_package(Boost COMPONENTS filesystem)
@@ -26,15 +25,16 @@ add_executable(main src/main.cpp
     src/ErrorHandler.cpp
     src/ErrorHandler.hpp
 )
-target_link_libraries(main PRIVATE Boost::headers)
 
-if(NO AND "${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
+if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
+    find_package(Threads REQUIRED)
     target_compile_definitions(filesystem_test PRIVATE CXX_FILESYSTEM_HAVE_FS)
     target_link_libraries(filesystem_test PRIVATE doctest::doctest std::filesystem Threads::Threads)
-    target_link_libraries(main PRIVATE dl Threads::Threads)
+    target_link_libraries(main PRIVATE dl std::filesystem Threads::Threads)
 else()
     target_compile_definitions(filesystem_test PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
-    target_link_libraries(filesystem_test PRIVATE doctest::doctest Boost::filesystem Threads::Threads)
+    target_link_libraries(filesystem_test PRIVATE doctest::doctest Boost::filesystem)
+    target_link_libraries(main PRIVATE Boost::headers)
 endif()
 
 option(BUILD_TESTS "Build test programs" ${MASTER_PROJECT})
@@ -44,7 +44,7 @@ if(BUILD_TESTS)
     find_package(GTest)
     if(GTEST_FOUND)
         add_executable(ScopeGuardTest ScopeGuardTest.cpp)
-        target_link_libraries(ScopeGuardTest PRIVATE Boost::headers GTest::GTest GTest::Main)
+        target_link_libraries(ScopeGuardTest PRIVATE GTest::GTest GTest::Main)
         add_test(NAME ScopeGuardTest COMMAND ScopeGuardTest)
     endif()
 
