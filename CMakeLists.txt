@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.13...3.19)
 
 project(CatchErrors LANGUAGES CXX)
 
-# Determine if this project is built as a subproject (using
-# add_subdirectory) or if it is the master project.
+# Determine if this project is built as a subproject (using add_subdirectory) or if it is the master
+# project.
 set(MASTER_PROJECT OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MASTER_PROJECT ON)
@@ -13,7 +13,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(CMAKE_CXX_EXTENSIONS NO)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(Filesystem REQUIRED)
 find_package(doctest REQUIRED)
 set(Boost_VERBOSE ON)
@@ -24,10 +24,7 @@ add_executable(UncaughtExceptionCounter UncaughtExceptionCounter.cpp)
 
 add_executable(FilesystemTest FilesystemTest.cpp)
 
-add_executable(ErrorHandlerTest src/main.cpp
-    src/ErrorHandler.cpp
-    src/ErrorHandler.hpp
-)
+add_executable(ErrorHandlerTest src/main.cpp src/ErrorHandler.cpp src/ErrorHandler.hpp)
 
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
     find_package(Threads REQUIRED)
