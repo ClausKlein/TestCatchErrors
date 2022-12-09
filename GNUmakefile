@@ -44,7 +44,9 @@ test: build
 	ninja -C $< $@
 
 check: build
-	run-clang-tidy.py -p $< OnLeavingScope.cpp ScopeGuardOnExit.cpp UncaughtExceptionCounter.cpp # src #XXX $(SRC)
+	run-clang-tidy -p $< -checks='-*,bugprone-*,hicpp-*,cpp-*,google-*,misc-*' \
+    src #XXX $(SRC)
+# OnLeavingScope.cpp ScopeGuardOnExit.cpp UncaughtExceptionCounter.cpp
 
 clean:
 	rm -rf $(PROGRAMMS) $(OBJ)

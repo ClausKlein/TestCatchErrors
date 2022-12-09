@@ -38,6 +38,7 @@ void s_threadSuspend() { s_thread(&s_funcSuspend); }
 void s_funcException() { throw std::runtime_error("Not implemented yet!"); }
 void s_threadException() { s_thread(&s_funcException); }
 
+// NOLINTNEXTLINE(hicpp-avoid-c-arrays)
 const MenuInfo s_calls[] = {{"Function calls ok", &s_funcOk},
                           {"Thread   calls ok", &s_threadOk},
                           {"Function calls exit", &s_funcExit},
@@ -58,7 +59,8 @@ void s_usage(const char* name)
                  "========================================\n"
                  "Available functions:\n"
                  "----------------------------------------\n";
-    for (auto i = 0u; s_calls[i].text != nullptr; ++i) {
+    // NOLINTNEXTLINE(hicpp-no-array-decay)
+    for (auto i = 0U; s_calls[i].text != nullptr; ++i) {
         std::cout << '\t' << i << ". " << s_calls[i].text << std::endl;
     }
 
@@ -77,6 +79,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Try to call given handler:\n";
     for (auto i = 1; i < argc; ++i) {
+        // NOLINTNEXTLINE(hicpp-no-array-decay)
         auto idx = std::stoul(std::string(argv[i]));
         {
             std::cout << "Calling " << s_calls[idx].text << std::endl;
