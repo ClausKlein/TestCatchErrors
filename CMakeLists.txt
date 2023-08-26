@@ -28,7 +28,7 @@ endif()
 add_executable(OnLeavingScope OnLeavingScope.cpp)
 add_executable(UncaughtExceptionCounter UncaughtExceptionCounter.cpp)
 
-if(TARGET Boost::filesystem)
+if(APPLE AND TARGET Boost::filesystem)
   add_executable(ScopeGuardOnExit ScopeGuardOnExit.cpp)
 endif()
 
@@ -57,7 +57,10 @@ elseif(TARGET Boost::filesystem)
     target_link_libraries(FilesystemTest PRIVATE doctest::doctest
                                                  Boost::filesystem)
   endif()
-  target_link_libraries(ScopeGuardOnExit PRIVATE Boost::filesystem)
+
+  if(TARGET ScopeGuardOnExit)
+    target_link_libraries(ScopeGuardOnExit PRIVATE Boost::filesystem)
+  endif()
 endif()
 
 option(BUILD_TESTS "Build test programs" ${PROJECT_IS_TOP_LEVEL})
@@ -76,6 +79,10 @@ if(BUILD_TESTS)
 
   if(TARGET FilesystemTest)
     add_test(NAME FilesystemTest COMMAND FilesystemTest)
+  endif()
+
+  if(TARGET ScopeGuardOnExit)
+    add_test(NAME ScopeGuardOnExit COMMAND ScopeGuardOnExit 42)
   endif()
 
   if(TARGET ErrorHandlerTest)
