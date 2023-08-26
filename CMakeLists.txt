@@ -45,7 +45,9 @@ if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
                                                  Threads::Threads)
   endif()
 
-  target_link_libraries(ErrorHandlerTest PRIVATE dl Threads::Threads)
+  if(TARGET ErrorHandlerTest)
+    target_link_libraries(ErrorHandlerTest PRIVATE dl Threads::Threads)
+  endif()
 elseif(TARGET Boost::filesystem)
   if(doctest_FOUND)
     target_compile_definitions(FilesystemTest

@@ -14,7 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: pip install cmake ninja
+      run: |
+        pip install cmake ninja
+        sudo apt install libboost-filesystem-dev libgtest-dev doctest-dev -y
     - name: make
       run: make
     - name: make check
