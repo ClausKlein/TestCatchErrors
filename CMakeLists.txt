@@ -20,7 +20,9 @@ if(doctest_FOUND)
     find_package(Boost CONFIG NAMES Boost boost)
   endif()
 
-  add_executable(FilesystemTest FilesystemTest.cpp)
+  if(APPLE)
+    add_executable(FilesystemTest FilesystemTest.cpp)
+  endif()
 endif()
 
 add_executable(OnLeavingScope OnLeavingScope.cpp)
@@ -39,7 +41,7 @@ endif()
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
   find_package(Threads REQUIRED)
 
-  if(doctest_FOUND)
+  if(TARGET FilesystemTest)
     target_compile_definitions(FilesystemTest PRIVATE CXX_FILESYSTEM_HAVE_FS)
     target_link_libraries(FilesystemTest PRIVATE doctest::doctest
                                                  Threads::Threads)
@@ -49,7 +51,7 @@ if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
     target_link_libraries(ErrorHandlerTest PRIVATE dl Threads::Threads)
   endif()
 elseif(TARGET Boost::filesystem)
-  if(doctest_FOUND)
+  if(TARGET FilesystemTest)
     target_compile_definitions(FilesystemTest
                                PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
     target_link_libraries(FilesystemTest PRIVATE doctest::doctest
