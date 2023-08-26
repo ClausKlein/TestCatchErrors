@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-// TODO: #define NO_BOOST
+// TODO(CK): #define NO_BOOST
 #ifndef NO_BOOST
 #    ifndef _GNU_SOURCE
 #        define _GNU_SOURCE
@@ -61,7 +61,7 @@ void s_dumpCallstack(const std::string& msg)
 
 void s_callExit()
 {
-    s_dumpCallstack(__func__);
+    s_dumpCallstack(__func__);  // NOLINT
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
@@ -69,7 +69,7 @@ void s_callExit()
 void s_callAbort(int signum)
 {
     ::signal(signum, SIG_DFL);
-    s_dumpCallstack(__func__);
+    s_dumpCallstack(__func__);  // NOLINT
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
@@ -77,7 +77,7 @@ void s_callAbort(int signum)
 void s_callBus(int signum)
 {
     ::signal(signum, SIG_DFL);
-    s_dumpCallstack(__func__);
+    s_dumpCallstack(__func__);  // NOLINT
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
@@ -85,7 +85,7 @@ void s_callBus(int signum)
 void s_callIllegal(int signum)
 {
     ::signal(signum, SIG_DFL);
-    s_dumpCallstack(__func__);
+    s_dumpCallstack(__func__);  // NOLINT
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
@@ -93,14 +93,14 @@ void s_callIllegal(int signum)
 void s_callSegmentationFault(int signum)
 {
     ::signal(signum, SIG_DFL);
-    s_dumpCallstack(__func__);
+    s_dumpCallstack(__func__);  // NOLINT
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
 
 void s_callTerminate()
 {
-    s_dumpCallstack(__func__);
+    s_dumpCallstack(__func__);  // NOLINT
     // XXX ::quick_exit(EXIT_FAILURE);
     _Exit(EXIT_SUCCESS);
 }
@@ -127,7 +127,7 @@ void ErrHdlr_register()
     ::signal(SIGBUS, s_callBus);
     ::signal(SIGILL, s_callIllegal);
     ::signal(SIGSEGV, s_callSegmentationFault);
-    // TODO ::at_quick_exit(s_callExit);
+    // TODO(CK) ::at_quick_exit(s_callExit);
     // NOTE: C++ only! CK
     std::set_terminate(s_callTerminate);
 }

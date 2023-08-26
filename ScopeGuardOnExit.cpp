@@ -32,14 +32,14 @@ void move_file_transact(const bf::path& from, const bf::path& to)
 
 void process(char* const buf, size_t len)
 {
-    if (!len) {
+    if (len == 0u) {
         return;
     }
 
     const auto save = buf[len - 1];
     buf[len - 1] = static_cast<char>(255);
     SCOPE_EXIT { buf[len - 1] = save; };
-    for (auto p = buf; p < buf + len; p++) {
+    for (auto* p = buf; p < buf + len; p++) {
         switch (auto c = *p) {
             //...
         }
@@ -49,7 +49,7 @@ void process(char* const buf, size_t len)
 void foo()
 {
     constexpr size_t bufferlen{1024 * 1024};
-    char* buf = static_cast<char*>(std::malloc(bufferlen));
+    char* buf = static_cast<char*>(std::calloc(1, bufferlen));
     SCOPE_EXIT
     {
         puts("free(buf)"); // TRACE
@@ -63,7 +63,7 @@ int string2int(const std::string& s)
     int r = std::stoi(s); // NOTE: may throw! CK
     SCOPE_SUCCESS
     {
-        puts(std::to_string(r).c_str());    // TRACE
+        puts(std::to_string(r).c_str()); // TRACE
         assert(std::to_string(r) == s);
     };
     return r;
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     SCOPE_EXIT
     {
         close(fd);
-        puts(name.data());  // TRACE
+        puts(name.data()); // TRACE
         unlink(name.data());
     };
 

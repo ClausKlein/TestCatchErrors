@@ -1,5 +1,6 @@
 #include <array>
 #include <iostream>
+#include <string>
 
 namespace {
 constexpr std::size_t len = 11;
@@ -26,12 +27,34 @@ void bar()
     size(a1);
     size(a2);
 }
+
+void oops(const std::string_view& value)
+{
+    std::cout << value << " std::size(string_view): " << std::size(value) << std::endl;
+}
+
 } // namespace
 
 int main()
 {
     foo();
     bar();
+
+    constexpr uint32_t value{42};
+    std::cout << value << " sizeof(unit32_t): " << sizeof(value) << std::endl;
+
+    {
+        constexpr std::string_view hello("holla!");
+        oops(hello);
+    }
+    {
+        const std::string hello("holla!");
+        oops(hello);
+    }
+    {
+        const char* hello("holla!");
+        oops(hello);
+    }
 }
 
 /***
