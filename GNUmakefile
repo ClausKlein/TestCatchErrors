@@ -25,6 +25,7 @@ all: build # $(PROGRAMMS)
 
 build:
 	cmake -G Ninja -B $@ -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+      -DCMAKE_BUILD_TYEP=Debug \
       -DCMAKE_FIND_USE_INSTALL_PREFIX=ON \
       -DCMAKE_PREFIX_PATH=$(CMAKE_STAGING_PREFIX) \
       -DCMAKE_STAGING_PREFIX=$(CMAKE_STAGING_PREFIX)
@@ -44,12 +45,11 @@ test: build
 	ninja -C $< $@
 
 check: build
-	run-clang-tidy -p $< -checks='-*,bugprone-*,hicpp-*,cpp-*,google-*,misc-*' \
-    src #XXX $(SRC)
-# OnLeavingScope.cpp ScopeGuardOnExit.cpp UncaughtExceptionCounter.cpp
+	which run-clang-tidy & \
+	run-clang-tidy -p $< -checks='-*,bugprone-*,hicpp-*,performance-*,portability-*,misc-*'
 
 clean:
-	rm -rf $(PROGRAMMS) $(OBJ)
+	rm -rf $(PROGRAMMS) $(OBJ) build
 
 distclean: clean
 	rm -rf build $(DEP)

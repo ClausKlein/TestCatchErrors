@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21...3.25)
+cmake_minimum_required(VERSION 3.21...3.27)
 
 project(CatchErrors LANGUAGES CXX)
 
@@ -11,45 +11,57 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # XXX find_package(Filesystem REQUIRED)
-find_package(doctest REQUIRED)
 
-# set(Boost_VERBOSE ON) find_package(Boost 1.71 CONFIG COMPONENTS filesystem)
-if(NOT TARGET Boost::filesystem)
-  find_package(Boost CONFIG NAMES Boost boost REQUIRED)
+find_package(doctest)
+if(doctest_FOUND)
+  set(Boost_VERBOSE ON)
+  find_package(Boost 1.71 CONFIG COMPONENTS filesystem)
+  if(NOT TARGET Boost::filesystem)
+    find_package(Boost CONFIG NAMES Boost boost)
+  endif()
+
+  add_executable(FilesystemTest FilesystemTest.cpp)
 endif()
 
 add_executable(OnLeavingScope OnLeavingScope.cpp)
 add_executable(UncaughtExceptionCounter UncaughtExceptionCounter.cpp)
-add_executable(FilesystemTest FilesystemTest.cpp)
 
 if(TARGET Boost::filesystem)
   add_executable(ScopeGuardOnExit ScopeGuardOnExit.cpp)
 endif()
 
-add_executable(ErrorHandlerTest src/main.cpp src/ErrorHandler.cpp
-                                src/ErrorHandler.hpp)
+if(TARGET Boost::boost)
+  add_executable(ErrorHandlerTest src/main.cpp src/ErrorHandler.cpp
+                                  src/ErrorHandler.hpp)
+  target_link_libraries(ErrorHandlerTest PRIVATE Boost::boost)
+endif()
 
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
   find_package(Threads REQUIRED)
 
-  target_compile_definitions(FilesystemTest PRIVATE CXX_FILESYSTEM_HAVE_FS)
-  target_link_libraries(FilesystemTest PRIVATE doctest::doctest
-                                               Threads::Threads)
+  if(doctest_FOUND)
+    target_compile_definitions(FilesystemTest PRIVATE CXX_FILESYSTEM_HAVE_FS)
+    target_link_libraries(FilesystemTest PRIVATE doctest::doctest
+                                                 Threads::Threads)
+  endif()
 
   target_link_libraries(ErrorHandlerTest PRIVATE dl Threads::Threads)
 elseif(TARGET Boost::filesystem)
-  target_compile_definitions(FilesystemTest
-                             PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
-  target_link_libraries(FilesystemTest PRIVATE doctest::doctest
-                                               Boost::filesystem)
+  if(doctest_FOUND)
+    target_compile_definitions(FilesystemTest
+                               PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
+    target_link_libraries(FilesystemTest PRIVATE doctest::doctest
+                                                 Boost::filesystem)
+  endif()
   target_link_libraries(ScopeGuardOnExit PRIVATE Boost::filesystem)
 endif()
-
-target_link_libraries(ErrorHandlerTest PRIVATE Boost::boost)
 
 option(BUILD_TESTS "Build test programs" ${PROJECT_IS_TOP_LEVEL})
 if(BUILD_TESTS)
   enable_testing()
+
+  add_test(NAME OnLeavingScope COMMAND OnLeavingScope)
+  add_test(NAME UncaughtExceptionCounter COMMAND UncaughtExceptionCounter)
 
   find_package(GTest)
   if(GTEST_FOUND)
@@ -58,13 +70,15 @@ if(BUILD_TESTS)
     add_test(NAME ScopeGuardTest COMMAND ScopeGuardTest)
   endif()
 
-  if(TARGET Boost::filesystem)
+  if(TARGET FilesystemTest)
     add_test(NAME FilesystemTest COMMAND FilesystemTest)
   endif()
 
-  add_test(NAME usage COMMAND ErrorHandlerTest)
-  add_test(NAME error COMMAND ErrorHandlerTest illegal parameter)
-  foreach(I RANGE -3 11)
-    add_test(NAME main_${I} COMMAND ErrorHandlerTest ${I})
-  endforeach()
+  if(TARGET ErrorHandlerTest)
+    add_test(NAME usage COMMAND ErrorHandlerTest)
+    add_test(NAME error COMMAND ErrorHandlerTest illegal parameter)
+    foreach(nu RANGE -3 11)
+      add_test(NAME main_${nu} COMMAND ErrorHandlerTest ${nu})
+    endforeach()
+  endif()
 endif()
